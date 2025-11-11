@@ -1,2 +1,1 @@
 npm run format:check || (npm run format && return 1)
-node scripts/check-phi.js

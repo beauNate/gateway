@@ -4,7 +4,7 @@ import Providers from '../../../../../src/providers';
 import { ANTHROPIC, AZURE_OPEN_AI } from '../../../../../src/globals';
 
 // Mock the Providers object
-jest.mock('../../../providers', () => ({
+jest.mock('../../../../../src/providers', () => ({
   openai: {
     api: {
       headers: jest.fn(),

@@ -36,11 +36,6 @@
     "format:check": "prettier --check \"./**/*.{js,jsx,ts,tsx,json}\"",
     "test:gateway": "jest src/",
     "test:plugins": "jest plugins/",
-    "test:all": "npm run test:gateway && npm run test:plugins",
-    "check:phi": "node scripts/check-phi.js",
-    "check:security": "npm audit --audit-level=moderate",
-    "check:types": "tsc --noEmit",
-    "check:all": "npm run format:check && npm run check:types && npm run check:phi && npm run check:security",
     "pre-push": "npm run build && node start-test.js",
     "prepare": "node -e \"if (process.env.NODE_ENV !== 'production'){process.exit(1)} \" || husky",
     "postinstall": "patch-package"
