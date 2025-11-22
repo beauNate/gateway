@@ -9,11 +9,11 @@ let fs: any;
 // Using dynamic require to avoid issues in non-Node environments
 if (isNodeInstance) {
   try {
-    // Use eval to prevent bundlers from trying to process these requires
-    const nodeRequire =
-      typeof require !== 'undefined' ? require : (eval('require') as any);
-    path = nodeRequire('path');
-    fs = nodeRequire('fs');
+    // Check if require is available (Node.js environment)
+    if (typeof require !== 'undefined') {
+      path = require('path');
+      fs = require('fs');
+    }
   } catch (e) {
     // Silently fail if require is not available
   }
