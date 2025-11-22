@@ -5,11 +5,17 @@ const isNodeInstance = getRuntimeKey() == 'node';
 let path: any;
 let fs: any;
 
-// Lazy-load Node.js modules when needed
-async function ensureNodeModules() {
-  if (isNodeInstance && !path) {
-    path = await import('path');
-    fs = await import('fs');
+// Load Node.js modules synchronously if in Node environment
+// Using dynamic require to avoid issues in non-Node environments
+if (isNodeInstance) {
+  try {
+    // Use eval to prevent bundlers from trying to process these requires
+    const nodeRequire =
+      typeof require !== 'undefined' ? require : (eval('require') as any);
+    path = nodeRequire('path');
+    fs = nodeRequire('fs');
+  } catch (e) {
+    // Silently fail if require is not available
   }
 }
 
@@ -17,6 +23,11 @@ export function getValueOrFileContents(value?: string, ignore?: boolean) {
   if (!value || ignore) return value;
 
   try {
+    // Only attempt file operations if we're in Node and modules are loaded
+    if (!isNodeInstance || !path || !fs) {
+      return value;
+    }
+
     // Check if value looks like a file path
     if (
       value.startsWith('/') ||
@@ -40,11 +51,6 @@ export function getValueOrFileContents(value?: string, ignore?: boolean) {
     // Return the original value if there's an error
     return value;
   }
-}
-
-// Initialize node modules if running in Node environment
-if (isNodeInstance) {
-  ensureNodeModules();
 }
 
 const nodeEnv = {
