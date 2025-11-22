@@ -4,9 +4,13 @@ import { env, getRuntimeKey } from 'hono/adapter';
 const isNodeInstance = getRuntimeKey() == 'node';
 let path: any;
 let fs: any;
-if (isNodeInstance) {
-  path = await import('path');
-  fs = await import('fs');
+
+// Lazy-load Node.js modules when needed
+async function ensureNodeModules() {
+  if (isNodeInstance && !path) {
+    path = await import('path');
+    fs = await import('fs');
+  }
 }
 
 export function getValueOrFileContents(value?: string, ignore?: boolean) {
@@ -36,6 +40,11 @@ export function getValueOrFileContents(value?: string, ignore?: boolean) {
     // Return the original value if there's an error
     return value;
   }
+}
+
+// Initialize node modules if running in Node environment
+if (isNodeInstance) {
+  ensureNodeModules();
 }
 
 const nodeEnv = {

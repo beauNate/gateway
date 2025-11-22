@@ -68,8 +68,13 @@ export const chatCompleteParams = (
   };
 
   Object.keys(defaultValues ?? {}).forEach((key) => {
-    if (Object.hasOwn(baseParams, key) && !Array.isArray(baseParams[key])) {
-      baseParams[key].default = defaultValues?.[key];
+    const paramConfig = baseParams[key];
+    if (
+      Object.hasOwn(baseParams, key) &&
+      !Array.isArray(paramConfig) &&
+      paramConfig
+    ) {
+      paramConfig.default = defaultValues?.[key];
     }
   });
 
