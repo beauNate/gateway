@@ -9,6 +9,19 @@
 <br>
 
 # AI Gateway
+
+## Recent Updates
+
+### PR #1: Critical Security Fixes (Merged)
+- Updated hono from 4.9.7 to 4.10.6, fixing CVE GHSA-m732-5p4w-x69g and GHSA-q7jf-gf43-6x6p
+- Updated form-data to 4.0.5, fixing CVE GHSA-fjxv-7rqg-78g4
+- Fixed TypeScript error in src/providers/open-ai-base/index.ts with proper type narrowing
+- Fixed src/utils/env.ts top-level await issues with async module safety
+- Fixed test mock paths and assertions
+- All 80 tests now passing
+- CodeQL scan: 0 alerts
+- npm audit: 0 vulnerabilities
+
 #### Route to 250+ LLMs with 1 fast & friendly API
 
 <img src="https://cfassets.portkey.ai/sdk.gif" width="550px" alt="Portkey AI Gateway Demo showing LLM routing capabilities" style="margin-left:-35px">
