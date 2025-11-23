@@ -43,16 +43,21 @@ describe('PreRequestValidatorService', () => {
 
       const result = await preRequestValidatorService.getResponse();
 
-      expect(result).toBeUndefined();
+      expect(result).toEqual({
+        response: undefined,
+        modelPricingConfig: undefined,
+      });
       expect(mockContext.get).toHaveBeenCalledWith('preRequestValidator');
     });
 
     it('should call validator with correct parameters when validator exists', async () => {
-      const mockValidator = jest
-        .fn()
-        .mockResolvedValue(
-          new Response('{"error": "Validation failed"}', { status: 400 })
-        );
+      const validatorResponse = new Response('{"error": "Validation failed"}', {
+        status: 400,
+      });
+      const mockValidator = jest.fn().mockResolvedValue({
+        response: validatorResponse,
+        modelPricingConfig: undefined,
+      });
       (mockContext.get as jest.Mock).mockReturnValue(mockValidator);
 
       preRequestValidatorService = new PreRequestValidatorService(
@@ -68,8 +73,8 @@ describe('PreRequestValidatorService', () => {
         mockRequestContext.requestHeaders,
         mockRequestContext.params
       );
-      expect(result).toBeInstanceOf(Response);
-      expect(result!.status).toBe(400);
+      expect(result.response).toBeInstanceOf(Response);
+      expect(result.response!.status).toBe(400);
     });
 
     it('should return validator response when validation fails', async () => {
@@ -85,7 +90,10 @@ describe('PreRequestValidatorService', () => {
           headers: { 'content-type': 'application/json' },
         }
       );
-      const mockValidator = jest.fn().mockResolvedValue(errorResponse);
+      const mockValidator = jest.fn().mockResolvedValue({
+        response: errorResponse,
+        modelPricingConfig: { cost: 0.001 },
+      });
       (mockContext.get as jest.Mock).mockReturnValue(mockValidator);
 
       preRequestValidatorService = new PreRequestValidatorService(
@@ -95,8 +103,9 @@ describe('PreRequestValidatorService', () => {
 
       const result = await preRequestValidatorService.getResponse();
 
-      expect(result).toBe(errorResponse);
-      expect(result!.status).toBe(429);
+      expect(result.response).toBe(errorResponse);
+      expect(result.response!.status).toBe(429);
+      expect(result.modelPricingConfig).toEqual({ cost: 0.001 });
     });
 
     it('should return undefined when validator passes (returns null)', async () => {
@@ -111,7 +120,10 @@ describe('PreRequestValidatorService', () => {
       const result = await preRequestValidatorService.getResponse();
 
       expect(mockValidator).toHaveBeenCalled();
-      expect(result).toBeNull();
+      expect(result).toEqual({
+        response: undefined,
+        modelPricingConfig: undefined,
+      });
     });
 
     it('should return undefined when validator passes (returns undefined)', async () => {
@@ -126,7 +138,10 @@ describe('PreRequestValidatorService', () => {
       const result = await preRequestValidatorService.getResponse();
 
       expect(mockValidator).toHaveBeenCalled();
-      expect(result).toBeUndefined();
+      expect(result).toEqual({
+        response: undefined,
+        modelPricingConfig: undefined,
+      });
     });
 
     it('should handle validator that throws an error', async () => {
@@ -152,9 +167,15 @@ describe('PreRequestValidatorService', () => {
     });
 
     it('should handle async validator correctly', async () => {
-      const delayedResponse = new Promise<Response>((resolve) => {
+      const validatorResponse = new Response('{"status": "validated"}', {
+        status: 200,
+      });
+      const delayedResponse = new Promise((resolve) => {
         setTimeout(() => {
-          resolve(new Response('{"status": "validated"}', { status: 200 }));
+          resolve({
+            response: validatorResponse,
+            modelPricingConfig: { model: 'test' },
+          });
         }, 10);
       });
       const mockValidator = jest.fn().mockReturnValue(delayedResponse);
@@ -167,8 +188,9 @@ describe('PreRequestValidatorService', () => {
 
       const result = await preRequestValidatorService.getResponse();
 
-      expect(result).toBeInstanceOf(Response);
-      expect(result!.status).toBe(200);
+      expect(result.response).toBeInstanceOf(Response);
+      expect(result.response!.status).toBe(200);
+      expect(result.modelPricingConfig).toEqual({ model: 'test' });
     });
 
     it('should pass correct parameters for different request contexts', async () => {
@@ -189,7 +211,7 @@ describe('PreRequestValidatorService', () => {
         },
       } as unknown as RequestContext;
 
-      const mockValidator = jest.fn().mockResolvedValue(undefined);
+      const mockValidator = jest.fn().mockResolvedValue(null);
       (mockContext.get as jest.Mock).mockReturnValue(mockValidator);
 
       const customService = new PreRequestValidatorService(
@@ -197,7 +219,7 @@ describe('PreRequestValidatorService', () => {
         customRequestContext
       );
 
-      await customService.getResponse();
+      const result = await customService.getResponse();
 
       expect(mockValidator).toHaveBeenCalledWith(
         mockContext,
@@ -205,6 +227,10 @@ describe('PreRequestValidatorService', () => {
         customRequestContext.requestHeaders,
         customRequestContext.params
       );
+      expect(result).toEqual({
+        response: undefined,
+        modelPricingConfig: undefined,
+      });
     });
 
     it('should handle empty request parameters', async () => {
@@ -214,7 +240,7 @@ describe('PreRequestValidatorService', () => {
         params: {},
       } as unknown as RequestContext;
 
-      const mockValidator = jest.fn().mockResolvedValue(undefined);
+      const mockValidator = jest.fn().mockResolvedValue(null);
       (mockContext.get as jest.Mock).mockReturnValue(mockValidator);
 
       const emptyService = new PreRequestValidatorService(
@@ -222,9 +248,13 @@ describe('PreRequestValidatorService', () => {
         emptyRequestContext
       );
 
-      await emptyService.getResponse();
+      const result = await emptyService.getResponse();
 
       expect(mockValidator).toHaveBeenCalledWith(mockContext, {}, {}, {});
+      expect(result).toEqual({
+        response: undefined,
+        modelPricingConfig: undefined,
+      });
     });
   });
 });

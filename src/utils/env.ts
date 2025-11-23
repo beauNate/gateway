@@ -4,15 +4,30 @@ import { env, getRuntimeKey } from 'hono/adapter';
 const isNodeInstance = getRuntimeKey() == 'node';
 let path: any;
 let fs: any;
+
+// Load Node.js modules synchronously if in Node environment
+// Using dynamic require to avoid issues in non-Node environments
 if (isNodeInstance) {
-  path = await import('path');
-  fs = await import('fs');
+  try {
+    // Check if require is available (Node.js environment)
+    if (typeof require !== 'undefined') {
+      path = require('path');
+      fs = require('fs');
+    }
+  } catch (e) {
+    // Silently fail if require is not available
+  }
 }
 
 export function getValueOrFileContents(value?: string, ignore?: boolean) {
   if (!value || ignore) return value;
 
   try {
+    // Only attempt file operations if we're in Node and modules are loaded
+    if (!isNodeInstance || !path || !fs) {
+      return value;
+    }
+
     // Check if value looks like a file path
     if (
       value.startsWith('/') ||
